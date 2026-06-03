@@ -6,12 +6,11 @@
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18-blue)]()
 [![TypeScript](https://img.shields.io/badge/construido_con-TypeScript-3178C6)]()
 
-
-[English](README.md)
-
 **Relay SMTP multi-cliente para formularios de contacto web. Un servicio, proyectos ilimitados.**
 
 </div>
+
+🌐 **También disponible en:** [Inglés](README.md)
 
 ---
 
