@@ -5,6 +5,7 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18-blue)]()
 [![TypeScript](https://img.shields.io/badge/built_with-TypeScript-3178C6)]()
+[🇪🇸 Español](README.es.md)
 
 **Multi-client SMTP relay for web contact forms. One service, unlimited projects.**
 
