@@ -6,7 +6,7 @@ set -e
 #   SERVICE_DIR=/opt/mail-relay ./deploy.sh
 #   RUN_USER=www-data SERVICE_DIR=/var/www/mail-relay ./deploy.sh
 # =============================================================================
-SERVICE_DIR="${SERVICE_DIR:-/srv/mail-relay}"
+SERVICE_DIR="${SERVICE_DIR:-/srv/services/mail-relay}"
 RUN_USER="${RUN_USER:-$(whoami)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -54,6 +54,11 @@ fi
 if [ -f ".env" ]; then
     sudo cp .env "$SERVICE_DIR/"
     echo "   ✔ .env"
+fi
+
+# 6b. Copiar .env.example (referencia)
+if [ -f ".env.example" ]; then
+    sudo cp .env.example "$SERVICE_DIR/"
 fi
 
 # 7. Instalar dependencias de producción

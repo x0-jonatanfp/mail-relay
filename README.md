@@ -95,7 +95,7 @@ curl -X POST http://localhost:4001/api/send \
 pnpm deploy
 ```
 
-Por defecto instala en `/srv/mail-relay` con tu usuario actual. Puedes personalizar:
+Por defecto instala en `/srv/services/mail-relay` con tu usuario actual. Puedes personalizar:
 
 ```bash
 # Cambiar ruta y usuario
@@ -108,11 +108,12 @@ SERVICE_DIR=/opt/mail-relay RUN_USER=www-data ./deploy.sh
 pnpm build
 
 # Crear directorio
-sudo mkdir -p /srv/mail-relay
+sudo mkdir -p /srv/services/mail-relay
 
 # Copiar archivos
-sudo cp -r dist/ templates/ /srv/mail-relay/
-sudo cp clients.example.yaml /srv/mail-relay/clients.yaml
+sudo cp -r dist/ templates/ /srv/services/mail-relay/
+sudo cp clients.example.yaml /srv/services/mail-relay/clients.yaml
+sudo cp .env.example /srv/services/mail-relay/.env  # y editar con tus credenciales
 
 # Editar servicio systemd
 sudo cp mail-relay.service /etc/systemd/system/mail-relay.service
@@ -132,6 +133,21 @@ sudo systemctl enable --now mail-relay
 > ```bash
 > sed -e 's/__USER__/midusuario/g' -e 's|__SERVICE_DIR__|/ruta/a/mail-relay|g' mail-relay.service | sudo tee /etc/systemd/system/mail-relay.service
 
+## Variables de entorno
+
+Copia `.env.example` como `.env` y rellena tus datos:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Descripción |
+|----------|-------------|
+| `PORT` | Puerto del servidor (4001) |
+| `BIND` | IP de escucha (`127.0.0.1` para local, `0.0.0.0` para público) |
+| `TELEGRAM_BOT_TOKEN` | Token de tu bot de Telegram (dejar vacío si no usas notificaciones) |
+| `TELEGRAM_CHAT_ID` | ID del chat/grupo para las notificaciones |
+
 ## Licencia
 
-MIT
+MIT — ver [LICENSE](LICENSE)
