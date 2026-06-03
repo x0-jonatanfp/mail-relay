@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GMC Shocks - Mensaje de Contacto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      
+      .email-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        line-height: 1.6;
+        color: #ffffff;
+        background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+      }
+      
+      .header {
+        text-align: center;
+        padding: 50px 30px;
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="80" cy="80" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="40" cy="60" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+        opacity: 0.3;
+      }
+      
+      .logo {
+        max-width: 280px;
+        height: auto;
+        filter: brightness(0) invert(1) drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+        position: relative;
+        z-index: 1;
+      }
+      
+      .title-section {
+        background: #ffffff;
+        color: #2c3e50;
+        padding: 40px 30px;
+        text-align: center;
+        border-bottom: 4px solid #e67e22;
+      }
+      
+      .main-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+        letter-spacing: -0.5px;
+      }
+      
+      .subtitle {
+        font-size: 16px;
+        color: #6c757d;
+        margin: 0;
+        font-weight: 400;
+      }
+      
+      .content {
+        padding: 0;
+        background: #f8f9fa;
+        color: #2c3e50;
+      }
+      
+      .info-card {
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        padding: 40px;
+        margin: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+      
+      .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0 0 30px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #e67e22;
+        padding-bottom: 10px;
+      }
+      
+      .info-grid {
+        display: grid;
+        gap: 0;
+      }
+      
+      .info-item {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        padding: 18px 0;
+        border-bottom: 1px solid #e9ecef;
+        align-items: center;
+      }
+      
+      .info-item:last-child {
+        border-bottom: none;
+      }
+      
+      .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      
+      .info-value {
+        color: #2c3e50;
+        font-weight: 500;
+        font-size: 16px;
+      }
+      
+      .message-card {
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 40px;
+        margin: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+      
+      .message-content {
+        background: #f8f9fa;
+        padding: 30px;
+        border: 1px solid #dee2e6;
+        font-size: 15px;
+        line-height: 1.7;
+        color: #495057;
+        white-space: pre-wrap;
+        font-weight: 400;
+      }
+      
+      .cta-section {
+        text-align: center;
+        margin-top: 40px;
+        padding: 30px;
+        background: linear-gradient(135deg, rgba(230, 126, 34, 0.08) 0%, rgba(211, 84, 0, 0.08) 100%);
+        border-radius: 8px;
+        border: 2px dashed #e67e22;
+      }
+      
+      .cta-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #e67e22;
+        margin: 0 0 10px 0;
+      }
+      
+      .cta-text {
+        color: #6c757d;
+        margin: 0;
+        font-size: 14px;
+      }
+      
+      .footer {
+        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        padding: 40px 30px;
+        text-align: center;
+        border-top: 4px solid #e67e22;
+      }
+      
+      .footer-content {
+        margin-bottom: 25px;
+      }
+      
+      .footer-text {
+        color: #cccccc;
+        font-size: 14px;
+        margin: 0 0 15px 0;
+        font-weight: 400;
+      }
+      
+      .footer-link {
+        display: inline-block;
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+        color: #ffffff;
+        text-decoration: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+      }
+      
+      .footer-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
+      }
+      
+      .footer-bottom {
+        border-top: 1px solid #333333;
+        padding-top: 25px;
+        margin-top: 25px;
+      }
+      
+      .copyright {
+        color: #999999;
+        font-size: 13px;
+        margin: 0 0 8px 0;
+        font-weight: 400;
+      }
+      
+      .tagline {
+        color: #666666;
+        font-size: 12px;
+        margin: 0;
+        font-weight: 300;
+      }
+      
+      @media (max-width: 600px) {
+        .info-card, .message-card {
+          padding: 30px;
+        }
+        
+        .main-title {
+          font-size: 24px;
+        }
+        
+        .logo {
+          max-width: 200px;
+        }
+        
+        .info-item {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        
+        .info-label {
+          font-size: 12px;
+        }
+        
+        .info-value {
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <!-- Content -->
+      <div class="content">
+        <!-- Customer Information -->
+        <div class="info-card">
+          <h2 class="card-title">
+            Información del Cliente
+          </h2>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Nombre</span>
+              <span class="info-value">{{from_name}}</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Email</span>
+              <span class="info-value">{{from_email}}</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Teléfono</span>
+              <span class="info-value">{{phone}}</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Producto</span>
+              <span class="info-value">{{subject}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message -->
+        <div class="message-card">
+          <h2 class="card-title">
+            Mensaje del Cliente
+          </h2>
+          
+          <div class="message-content">
+            {{message}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

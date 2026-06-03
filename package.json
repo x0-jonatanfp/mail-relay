@@ -1,0 +1,32 @@
+{
+  "name": "mail-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SMTP relay para formularios de contacto - Reutilizable para multiples proyectos",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js",
+    "install:service": "sudo cp mail-relay.service /etc/systemd/system/mail-relay.service && sudo systemctl daemon-reload",
+    "enable": "sudo systemctl enable --now mail-relay",
+    "restart": "sudo systemctl restart mail-relay",
+    "status": "systemctl status mail-relay",
+    "logs": "sudo journalctl -u mail-relay -n 50 -f",
+    "deploy": "bash deploy.sh"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "nodemailer": "^6.9.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/express": "^4.17.21",
+    "@types/nodemailer": "^6.4.14",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}

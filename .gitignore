@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+*.log
+clients.yaml
+.DS_Store
+*.swp
+*.swo
+*~

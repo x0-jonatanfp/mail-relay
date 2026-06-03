@@ -1,0 +1,28 @@
+# =============================================================================
+# clients.example.yaml — Template de configuración multi-cliente
+# =============================================================================
+# Copia este archivo como clients.yaml y rellena tus datos reales.
+# clients.yaml está en .gitignore, no se sube al repositorio.
+#
+# Uso:
+#   cp clients.example.yaml clients.yaml
+#   # editar clients.yaml con credenciales reales
+# =============================================================================
+
+clients:
+  - id: mi-cliente
+    name: Mi Cliente
+    domains:
+      - micliente.com
+      - www.micliente.com
+    smtp:
+      host: smtp.micliente.com
+      port: 465
+      secure: true
+      user: tu@email.com
+      pass: "tu-contraseña"
+    from:
+      name: Mi Cliente
+      email: no-reply@micliente.com
+    to: tu@email.com
+    template: default
