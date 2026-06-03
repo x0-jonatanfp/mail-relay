@@ -1,40 +1,52 @@
 # mail-relay
 
-Relay SMTP multi-cliente para formularios de contacto web. Reutilizable para múltiples proyectos con configuración YAML.
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Características
+Relay SMTP multi-cliente para formularios de contacto web. Un solo servicio, múltiples proyectos, zero complicación.
 
-- **Multi-cliente**: un solo servicio maneja formularios de varios sitios web
-- **Configuración YAML**: fácil de mantener, solo añadir un bloque por cliente
-- **SMTP seguro**: soporta SSL/TLS (puerto 465) y STARTTLS (puerto 587)
-- **Notificaciones Telegram**: alertas al recibir formularios y estado del servicio cada 4h
-- **Sin dependencias extra**: usa `fetch` nativo de Node para Telegram
-- **Listo para systemd**: service unit incluido para despliegue en producción
+---
 
-## Requisitos
+## ✨ Características
 
-- Node.js 18+
-- pnpm
-- Un servidor SMTP saliente (por cliente)
+- **Multi-cliente** — Un solo servicio maneja formularios de todos tus sitios web
+- **Configuración YAML** — Añadir un nuevo cliente es copiar y pegar un bloque
+- **SMTP seguro** — Soporta SSL/TLS (465) y STARTTLS (587)
+- **Notificaciones Telegram** — Te avisa al recibir un formulario y te manda el estado del servicio cada 4h
+- **Sin dependencias extra** — Usa `fetch` nativo de Node, nada de librerías raras
+- **Listo para producción** — Service unit systemd incluido
 
-## Instalación
+---
+
+## 🧱 Stack
+
+| Componente | Tecnología |
+|------------|------------|
+| Runtime | Node.js 18+ |
+| Framework | Express |
+| Email | Nodemailer |
+| Config | js-yaml + dotenv |
+| Notificaciones | Telegram Bot API (fetch nativo) |
+| Init | systemd |
+
+---
+
+## ⚙️ Configuración rápida
+
+### 1. Clonar e instalar
 
 ```bash
+git clone https://github.com/x0-jonatanfp/mail-relay.git
+cd mail-relay
 pnpm install
 ```
 
-## Configuración
+### 2. Configurar clientes
 
-### Variables de entorno (`.env`)
-
-```env
-PORT=4001
-BIND=127.0.0.1
-TELEGRAM_BOT_TOKEN=...
-TELEGRAM_CHAT_ID=...
+```bash
+cp clients.example.yaml clients.yaml
 ```
 
-### Clientes (`clients.yaml`)
+Edita `clients.yaml` con los datos de tus clientes:
 
 ```yaml
 clients:
@@ -42,21 +54,35 @@ clients:
     name: Mi Cliente
     domains:
       - micliente.com
-      - www.micliente.com
     smtp:
       host: smtp.micliente.com
       port: 587
       secure: false
       user: formularios@micliente.com
-      pass: contraseña
+      pass: "tu-contraseña"
     from:
       name: Mi Cliente
-      email: formularios@micliente.com
+      email: no-reply@micliente.com
     to: info@micliente.com
     template: default
 ```
 
-## Uso
+### 3. Variables de entorno
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Descripción |
+|----------|-------------|
+| `PORT` | Puerto del servidor (4001) |
+| `BIND` | IP de escucha (`127.0.0.1` o `0.0.0.0`) |
+| `TELEGRAM_BOT_TOKEN` | Token de tu bot de Telegram |
+| `TELEGRAM_CHAT_ID` | ID del chat/grupo para notificaciones |
+
+---
+
+## 🚀 Uso
 
 ```bash
 # Desarrollo
@@ -72,7 +98,7 @@ pnpm serve
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `GET` | `/api/health` | Health check del servicio |
-| `POST` | `/api/send` | Enviar formulario |
+| `POST` | `/api/send` | Enviar un formulario |
 
 ### Ejemplo de envío
 
@@ -83,13 +109,25 @@ curl -X POST http://localhost:4001/api/send \
     "client_id": "mi-cliente",
     "from_name": "Juan Pérez",
     "from_email": "juan@example.com",
-    "message": "Consulta sobre productos"
+    "message": "Quiero información sobre sus productos"
   }'
 ```
 
-## Despliegue
+Respuesta:
 
-### Rápido (usando deploy.sh)
+```json
+{
+  "success": true,
+  "method": "smtp",
+  "message": "Mensaje enviado correctamente"
+}
+```
+
+---
+
+## 🏠 Despliegue
+
+### Automático (deploy.sh)
 
 ```bash
 pnpm deploy
@@ -98,7 +136,6 @@ pnpm deploy
 Por defecto instala en `/srv/services/mail-relay` con tu usuario actual. Puedes personalizar:
 
 ```bash
-# Cambiar ruta y usuario
 SERVICE_DIR=/opt/mail-relay RUN_USER=www-data ./deploy.sh
 ```
 
@@ -106,48 +143,61 @@ SERVICE_DIR=/opt/mail-relay RUN_USER=www-data ./deploy.sh
 
 ```bash
 pnpm build
-
-# Crear directorio
 sudo mkdir -p /srv/services/mail-relay
-
-# Copiar archivos
 sudo cp -r dist/ templates/ /srv/services/mail-relay/
 sudo cp clients.example.yaml /srv/services/mail-relay/clients.yaml
-sudo cp .env.example /srv/services/mail-relay/.env  # y editar con tus credenciales
+sudo cp .env.example /srv/services/mail-relay/.env
+```
 
-# Editar servicio systemd
+Luego configura el servicio systemd:
+
+```bash
 sudo cp mail-relay.service /etc/systemd/system/mail-relay.service
 sudo systemctl daemon-reload
 
-# Antes de arrancar, edita el service unit:
+# Edita User, WorkingDirectory y ExecStart con tus datos
 sudo systemctl edit --full mail-relay.service
-#   - Cambia User por el usuario que ejecutará el proceso
-#   - Ajusta WorkingDirectory y ExecStart a tu ruta
 
 sudo systemctl enable --now mail-relay
 ```
 
-> **Nota:** `mail-relay.service` usa los placeholders `__USER__` y `__SERVICE_DIR__`.
-> `deploy.sh` los reemplaza automáticamente. Si instalas a mano, sustitúyelos
-> por los valores de tu sistema o usa `sed`:
+> **Nota:** El archivo `mail-relay.service` usa los placeholders `__USER__` y `__SERVICE_DIR__`.
+> `deploy.sh` los reemplaza automáticamente. Si instalas a mano, hazlo con `sed`:
 > ```bash
-> sed -e 's/__USER__/midusuario/g' -e 's|__SERVICE_DIR__|/ruta/a/mail-relay|g' mail-relay.service | sudo tee /etc/systemd/system/mail-relay.service
+> sed -e 's/__USER__/midusuario/g' \
+>     -e 's|__SERVICE_DIR__|/ruta/a/mail-relay|g' \
+>     mail-relay.service | sudo tee /etc/systemd/system/mail-relay.service
+> ```
 
-## Variables de entorno
+---
 
-Copia `.env.example` como `.env` y rellena tus datos:
+## 📁 Estructura
 
-```bash
-cp .env.example .env
+```
+mail-relay/
+├── src/
+│   ├── application/services/   # Lógica de negocio
+│   ├── config/                 # Carga de YAML y env vars
+│   ├── domain/                 # Entidades y puertos
+│   ├── infrastructure/
+│   │   ├── http/               # Servidor Express
+│   │   ├── smtp/               # Adaptador Nodemailer
+│   │   └── telegram/           # Notificaciones Telegram
+│   └── index.ts                # Punto de entrada
+├── templates/                  # Plantillas HTML por cliente
+├── clients.example.yaml        # Template de configuración
+├── .env.example                # Template de variables de entorno
+├── deploy.sh                   # Script de deploy
+├── mail-relay.service          # Template systemd
+└── LICENSE
 ```
 
-| Variable | Descripción |
-|----------|-------------|
-| `PORT` | Puerto del servidor (4001) |
-| `BIND` | IP de escucha (`127.0.0.1` para local, `0.0.0.0` para público) |
-| `TELEGRAM_BOT_TOKEN` | Token de tu bot de Telegram (dejar vacío si no usas notificaciones) |
-| `TELEGRAM_CHAT_ID` | ID del chat/grupo para las notificaciones |
+---
 
-## Licencia
+## 📄 Licencia
 
-MIT — ver [LICENSE](LICENSE)
+MIT — ver [LICENSE](LICENSE) para más detalles.
+
+---
+
+Hecho con ❤️ para no tener que gestionar 20 formularios de contacto manualmente.
