@@ -1,17 +1,15 @@
 [Unit]
 Description=Mail Relay - Relay de formularios de contacto multi-cliente
-Documentation=https://github.com/cultofskaro/mail-relay
+Documentation=https://github.com/x0-jonatanfp/mail-relay
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=cultofskaro
-WorkingDirectory=/srv/services/mail-relay
+User=__USER__
+WorkingDirectory=__SERVICE_DIR__
 
-# IMPORTANTE: compilar antes de reiniciar:
-#   npm run build-deploy   (o ./deploy.sh para hacerlo todo)
-ExecStart=/usr/bin/node /srv/services/mail-relay/dist/index.js
+ExecStart=/usr/bin/node __SERVICE_DIR__/dist/index.js
 
 Restart=on-failure
 RestartSec=5

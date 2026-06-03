@@ -89,17 +89,48 @@ curl -X POST http://localhost:4001/api/send \
 
 ## Despliegue
 
+### Rápido (usando deploy.sh)
+
 ```bash
 pnpm deploy
 ```
 
-O manualmente:
+Por defecto instala en `/srv/mail-relay` con tu usuario actual. Puedes personalizar:
+
+```bash
+# Cambiar ruta y usuario
+SERVICE_DIR=/opt/mail-relay RUN_USER=www-data ./deploy.sh
+```
+
+### Manual
 
 ```bash
 pnpm build
-sudo cp -r dist/ /srv/services/mail-relay/
-sudo systemctl restart mail-relay
+
+# Crear directorio
+sudo mkdir -p /srv/mail-relay
+
+# Copiar archivos
+sudo cp -r dist/ templates/ /srv/mail-relay/
+sudo cp clients.example.yaml /srv/mail-relay/clients.yaml
+
+# Editar servicio systemd
+sudo cp mail-relay.service /etc/systemd/system/mail-relay.service
+sudo systemctl daemon-reload
+
+# Antes de arrancar, edita el service unit:
+sudo systemctl edit --full mail-relay.service
+#   - Cambia User por el usuario que ejecutará el proceso
+#   - Ajusta WorkingDirectory y ExecStart a tu ruta
+
+sudo systemctl enable --now mail-relay
 ```
+
+> **Nota:** `mail-relay.service` usa los placeholders `__USER__` y `__SERVICE_DIR__`.
+> `deploy.sh` los reemplaza automáticamente. Si instalas a mano, sustitúyelos
+> por los valores de tu sistema o usa `sed`:
+> ```bash
+> sed -e 's/__USER__/midusuario/g' -e 's|__SERVICE_DIR__|/ruta/a/mail-relay|g' mail-relay.service | sudo tee /etc/systemd/system/mail-relay.service
 
 ## Licencia
 

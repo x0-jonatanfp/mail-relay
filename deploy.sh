@@ -1,7 +1,13 @@
 #!/bin/bash
 set -e
 
-SERVICE_DIR="/srv/services/mail-relay"
+# =============================================================================
+# Configuración — sobreescribe con variables de entorno si quieres personalizar
+#   SERVICE_DIR=/opt/mail-relay ./deploy.sh
+#   RUN_USER=www-data SERVICE_DIR=/var/www/mail-relay ./deploy.sh
+# =============================================================================
+SERVICE_DIR="${SERVICE_DIR:-/srv/mail-relay}"
+RUN_USER="${RUN_USER:-$(whoami)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 cd "$SCRIPT_DIR"
@@ -40,7 +46,7 @@ if [ -f "clients.yaml" ]; then
     sudo cp clients.yaml "$SERVICE_DIR/"
     echo "   ✔ clients.yaml"
 else
-    echo "   ⚠  clients.yaml no encontrado, usando clients.example.yaml"
+    echo "   ⚠  clients.yaml no encontrado, usando clients.example.yaml como base"
     sudo cp clients.example.yaml "$SERVICE_DIR/clients.yaml"
 fi
 
@@ -53,15 +59,21 @@ fi
 # 7. Instalar dependencias de producción
 echo ""
 echo "📦 Instalando dependencias de producción..."
-PNPM="$(which pnpm 2>/dev/null || echo /home/cultofskaro/.local/share/pnpm/pnpm)"
+PNPM="$(which pnpm 2>/dev/null || command -v pnpm 2>/dev/null || echo '')"
+if [ -z "$PNPM" ]; then
+    echo "❌ pnpm no encontrado. Instálalo con: npm install -g pnpm"
+    exit 1
+fi
 sudo cp package.json pnpm-lock.yaml "$SERVICE_DIR/"
 cd "$SERVICE_DIR" && sudo "$PNPM" install --prod --frozen-lockfile 2>&1 | tail -5
 cd "$SCRIPT_DIR"
 
-# 8. Actualizar e instalar servicio systemd
+# 8. Generar e instalar servicio systemd
 echo ""
-echo "🔧 Actualizando servicio systemd..."
-sudo cp mail-relay.service /etc/systemd/system/mail-relay.service
+echo "🔧 Generando servicio systemd..."
+sed -e "s/__USER__/$RUN_USER/g" \
+    -e "s|__SERVICE_DIR__|$SERVICE_DIR|g" \
+    mail-relay.service | sudo tee /etc/systemd/system/mail-relay.service > /dev/null
 sudo systemctl daemon-reload
 sudo systemctl enable mail-relay 2>/dev/null || true
 
@@ -80,4 +92,7 @@ echo ""
 echo "=============================="
 echo "  ✅ Deploy completado"
 echo "=============================="
+echo "  Directorio : $SERVICE_DIR"
+echo "  Usuario    : $RUN_USER"
+echo ""
 sudo systemctl status mail-relay --no-pager 2>&1 | head -15
