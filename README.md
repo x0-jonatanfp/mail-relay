@@ -10,10 +10,12 @@
 
 </div>
 
-🌐 **Also available in:** [Spanish](README.es.md)
 
 ---
 
+🌐 **Also available in:** [Spanish](README.es.md)
+
+---
 ## Features
 
 - **Multi-client** — Handle contact forms from multiple websites with a single service

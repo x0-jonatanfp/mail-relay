@@ -10,10 +10,12 @@
 
 </div>
 
-🌐 **También disponible en:** [Inglés](README.md)
 
 ---
 
+🌐 **También disponible en:** [Inglés](README.md)
+
+---
 ## Características
 
 - **Multi-cliente** — Gestiona formularios de contacto de múltiples sitios web con un solo servicio
