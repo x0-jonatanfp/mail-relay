@@ -21,9 +21,10 @@
 - **Multi-cliente** — Gestiona formularios de contacto de múltiples sitios web con un solo servicio
 - **Configuración YAML** — Añade un nuevo cliente copiando un bloque
 - **SMTP seguro** — Soporta SSL/TLS (puerto 465) y STARTTLS (puerto 587)
-- **Notificaciones Telegram** — Recibe alertas cuando se envía un formulario y obtén actualizaciones periódicas del estado del servicio
-- **Sin dependencias extra** — Usa `fetch` nativo de Node para Telegram, sin librerías adicionales
-- **Listo para producción** — Incluye un unit de servicio systemd para despliegue
+- **Persistencia PostgreSQL** — Cada envío queda registrado con fecha, cliente, estado y detalles del error
+- **Notificaciones Telegram** — Alertas detalladas al recibir un formulario, reportes de error en fallos, y estado del servicio cada 2 horas
+- **Plantillas HTML personalizadas** — Templates de email por cliente con inyección de variables
+- **Listo para producción** — Incluye un unit de servicio systemd para despliegue automatizado
 
 ---
 
@@ -33,6 +34,7 @@
 
 - Node.js 18+
 - pnpm
+- PostgreSQL (en ejecución y accesible)
 
 ### Instalación
 
@@ -72,7 +74,13 @@ clients:
     template: default
 ```
 
-Configura las variables de entorno:
+Crea la base de datos y configura `.env`:
+
+```bash
+createdb mailrelay
+```
+
+Luego configura las variables de entorno:
 
 | Variable | Descripción |
 |---|---|
@@ -80,8 +88,24 @@ Configura las variables de entorno:
 | `BIND` | Dirección de escucha (`127.0.0.1` o `0.0.0.0`) |
 | `TELEGRAM_BOT_TOKEN` | Token de tu bot de Telegram |
 | `TELEGRAM_CHAT_ID` | ID del chat o grupo para notificaciones |
+| `DATABASE_URL` | Cadena de conexión PostgreSQL (`postgresql://user:pass@host:5432/mailrelay`) |
 
 > **Nota:** `clients.yaml` y `.env` están en `.gitignore` para evitar commits accidentales de datos sensibles.
+
+La tabla necesaria se crea automáticamente — o manualmente con:
+
+```sql
+CREATE TABLE sent_emails (
+  id         SERIAL PRIMARY KEY,
+  date       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  client_id  VARCHAR(100) NOT NULL,
+  client_name VARCHAR(200) NOT NULL,
+  to_email   VARCHAR(255) NOT NULL,
+  subject    VARCHAR(255),
+  status     VARCHAR(20) NOT NULL,
+  error_msg  TEXT
+);
+```
 
 ---
 
@@ -124,6 +148,42 @@ Respuesta:
   "method": "smtp",
   "message": "Mensaje enviado correctamente"
 }
+```
+
+---
+
+## Notificaciones Telegram
+
+**Formulario recibido:**
+
+```
+📬 Nuevo formulario · Mi Cliente
+━━━━━━━━━━━━━━━━━━
+👤 Juan Pérez
+📧 juan@example.com
+📞 +34 612 345 678
+📝 Consulta sobre productos
+```
+
+**Error al enviar:**
+
+```
+❌ Error · Mi Cliente
+━━━━━━━━━━━━━━━━━━
+⚠️  Conexión rehusada
+🔧 smtp.micliente.com:587
+```
+
+**Estado periódico (cada 2h):**
+
+```
+📊 mail-relay · Status 14:30
+━━━━━━━━━━━━━━━━━━
+👥 Clientes:     3 activos
+📬 Envíos hoy:   8
+📈 Total acum.:  340
+⏱  Último envío: hace 2 min
+━━━━━━━━━━━━━━━━━━
 ```
 
 ---
@@ -177,12 +237,13 @@ sudo systemctl enable --now mail-relay
 mail-relay/
 ├── src/
 │   ├── application/services/   # Lógica de negocio
-│   ├── config/                 # Cargadores de configuración YAML y env
+│   ├── config/                 # Cargadores de YAML, env y BD
 │   ├── domain/                 # Entidades y puertos
 │   ├── infrastructure/
 │   │   ├── http/               # Servidor Express
 │   │   ├── smtp/               # Adaptador Nodemailer
-│   │   └── telegram/           # Notificaciones Telegram
+│   │   ├── telegram/           # Notificaciones Telegram
+│   │   └── persistence/        # Relay-store PostgreSQL
 │   └── index.ts                # Punto de entrada
 ├── templates/                  # Plantillas HTML de email
 ├── clients.example.yaml        # Plantilla de configuración de cliente
@@ -201,6 +262,7 @@ mail-relay/
 | Runtime | Node.js 18+ |
 | Framework | Express |
 | Email | Nodemailer |
+| Base de datos | PostgreSQL |
 | Configuración | js-yaml + dotenv |
 | Notificaciones | Telegram Bot API |
 | Sistema de inicio | systemd |
