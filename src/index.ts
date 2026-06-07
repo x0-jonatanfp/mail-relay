@@ -4,8 +4,9 @@ import { createServer, startServer } from './infrastructure/http/server.js'
 import { TelegramSender } from './infrastructure/telegram/telegram-sender.js'
 import { loadClients } from './config/clients.js'
 import { env } from './config/env.js'
+import { getServiceStatus } from './infrastructure/persistence/relay-store.js'
 
-const SERVICE_STATUS_INTERVAL_HOURS = 4
+const SERVICE_STATUS_INTERVAL_HOURS = 2
 
 function main() {
   // 1. Cargar clientes
@@ -35,11 +36,13 @@ function main() {
 function startServiceStatus(telegram: TelegramSender, clientCount: number, mailRelay: MailRelayService): void {
   const intervalMs = SERVICE_STATUS_INTERVAL_HOURS * 60 * 60 * 1000
 
-  const sendStatus = () => {
-    const memMB = (process.memoryUsage().rss / 1024 / 1024).toFixed(1)
-    const sent = mailRelay.sentCount
-    telegram.sendServiceStatus(clientCount, memMB, sent, SERVICE_STATUS_INTERVAL_HOURS)
-    mailRelay.resetSentCount()
+  const sendStatus = async () => {
+    try {
+      const status = await getServiceStatus(clientCount)
+      await telegram.sendServiceStatus(status, SERVICE_STATUS_INTERVAL_HOURS)
+    } catch (err) {
+      console.error('[status] Error al obtener estadísticas:', err instanceof Error ? err.message : String(err))
+    }
   }
 
   // Primer envío a los 10 segundos de arrancar (para dar tiempo a que todo esté listo)

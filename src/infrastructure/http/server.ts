@@ -79,9 +79,22 @@ export function createServer(
 
       const result = await mailRelay.send(formData, client)
 
-      // Notificar a Telegram si el envío fue exitoso (fire-and-forget)
+      // Notificar a Telegram (fire-and-forget)
       if (result.success) {
-        telegram.sendFormNotification(client.name).catch(() => {})
+        telegram.sendFormNotification(
+          client.name,
+          formData.from_name,
+          formData.from_email,
+          formData.phone,
+          formData.subject,
+        ).catch(() => {})
+      } else {
+        telegram.sendErrorNotification(
+          client.name,
+          result.error || 'Error desconocido',
+          client.smtp.host,
+          client.smtp.port,
+        ).catch(() => {})
       }
 
       res.status(result.success ? 200 : 502).json(result)
