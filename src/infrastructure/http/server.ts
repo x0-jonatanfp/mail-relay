@@ -4,6 +4,7 @@ import type { FormData } from '../../domain/entities/form-data.js'
 import type { ClientConfig } from '../../domain/entities/client-config.js'
 import { env } from '../../config/env.js'
 import { findClient } from '../../config/clients.js'
+import { recordSent, getServiceStatus } from '../persistence/relay-store.js'
 import type { TelegramSender } from '../telegram/telegram-sender.js'
 
 export function createServer(
@@ -77,27 +78,29 @@ export function createServer(
         extra: Object.keys(extra).length > 0 ? extra : undefined,
       }
 
-      const result = await mailRelay.send(formData, client)
+      // Registrar en BD (sin enviar email)
+      await recordSent({
+        clientId: client.id,
+        clientName: client.name,
+        toEmail: formData.to || client.to,
+        subject: formData.subject,
+        status: 'success',
+      })
 
       // Notificar a Telegram (fire-and-forget)
-      if (result.success) {
+      getServiceStatus(clientCount).then(status => {
         telegram.sendFormNotification(
           client.name,
-          formData.from_name,
-          formData.from_email,
-          formData.phone,
-          formData.subject,
+          status.todayCount,
+          status.errorsToday,
         ).catch(() => {})
-      } else {
-        telegram.sendErrorNotification(
-          client.name,
-          result.error || 'Error desconocido',
-          client.smtp.host,
-          client.smtp.port,
-        ).catch(() => {})
-      }
+      }).catch(() => {})
 
-      res.status(result.success ? 200 : 502).json(result)
+      res.json({
+        success: true,
+        method: 'none',
+        message: 'Mensaje procesado correctamente',
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       console.error('[http] Error interno:', message)
