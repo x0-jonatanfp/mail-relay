@@ -1,28 +1,21 @@
-import { env } from '../../config/env.js'
 import type { ServiceStatus } from '../persistence/relay-store.js'
 
-const TELEGRAM_API = 'https://api.telegram.org/bot'
+const GATEWAY_URL = process.env.TG_GATEWAY_URL || 'http://localhost:2025'
 
 export class TelegramSender {
-  private token: string
   private chatId: string
 
   constructor() {
-    this.token = env.TELEGRAM_BOT_TOKEN
-    this.chatId = env.TELEGRAM_CHAT_ID
+    this.chatId = process.env.TELEGRAM_CHAT_ID || ''
   }
 
   private get url() {
-    return `${TELEGRAM_API}${this.token}/sendMessage`
+    return `${GATEWAY_URL}/api/send`
   }
 
-  /**
-   * Envía un mensaje de texto al chat de Telegram.
-   * Fire-and-forget: no lanza errores al caller.
-   */
   private async send(text: string): Promise<void> {
-    if (!this.token || !this.chatId) {
-      console.warn('[telegram] Token o Chat ID no configurados')
+    if (!this.chatId) {
+      console.warn('[telegram] Chat ID no configurado')
       return
     }
 
@@ -39,23 +32,34 @@ export class TelegramSender {
 
       if (!res.ok) {
         const body = await res.text()
-        console.warn(`[telegram] Error ${res.status}: ${body}`)
+        console.warn(`[telegram] Gateway error ${res.status}: ${body}`)
       }
     } catch (err) {
-      console.warn('[telegram] Error de conexión:', err instanceof Error ? err.message : String(err))
+      console.warn('[telegram] Error de conexión con gateway:', err instanceof Error ? err.message : String(err))
     }
   }
 
   async sendFormNotification(clientName: string, todayCount: number, errorsToday: number): Promise<void> {
-    await this.send(`✅ ${escapeHtml(clientName)} · Entregado · ${todayCount} hoy · ${errorsToday} errores`)
+    const text = `<b>✅ ${escapeHtml(clientName)}</b>
+
+<pre>📬 ${todayCount} envíos hoy | ❌ ${errorsToday} errores</pre>`
+    await this.send(text)
   }
 
   async sendErrorNotification(clientName: string, error: string, host: string, port: number): Promise<void> {
-    await this.send(`❌ Error en ${escapeHtml(clientName)} · ${escapeHtml(error)} · ${escapeHtml(host)}:${port}`)
+    const text = `<b>❌ Error en ${escapeHtml(clientName)}</b>
+
+<pre>📬 ${escapeHtml(error)}</pre>
+
+${escapeHtml(host)}:${port}`
+    await this.send(text)
   }
 
   async sendServiceStatus(status: ServiceStatus, intervalHours: number): Promise<void> {
-    await this.send(`📊 mail-relay · ${status.clientCount} clientes · ${status.todayCount} envíos hoy · ${status.totalSent} total`)
+    const text = `<b>📊 mail-relay · ${status.clientCount} clientes</b>
+
+<pre>📬 ${status.todayCount} hoy · ${status.totalSent} total</pre>`
+    await this.send(text)
   }
 }
 
