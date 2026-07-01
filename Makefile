@@ -9,9 +9,9 @@ deploy:
 	  --exclude='node_modules/' \
 	  --exclude='.env' \
 	  --exclude='logs/' \
+	  --exclude='.git/' \
 	  . $(DEST)/
-	cp package.json pnpm-lock.yaml $(DEST)/
-	cd $(DEST) && pnpm install --prod
+	cd $(DEST) && CI=true pnpm install --prod
 	systemctl --user restart $(SERVICE)
 
 restart:
