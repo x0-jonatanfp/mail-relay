@@ -9,12 +9,10 @@
     "start": "tsx src/index.ts",
     "build": "tsc",
     "serve": "node dist/index.js",
-    "install:service": "sudo cp mail-relay.service /etc/systemd/system/mail-relay.service && sudo systemctl daemon-reload",
-    "enable": "sudo systemctl enable --now mail-relay",
-    "restart": "sudo systemctl restart mail-relay",
-    "status": "systemctl status mail-relay",
-    "logs": "sudo journalctl -u mail-relay -n 50 -f",
-    "deploy": "bash deploy.sh"
+    "restart": "systemctl --user restart mail-relay.service",
+    "status": "systemctl --user status mail-relay.service",
+    "logs": "journalctl --user -u mail-relay.service -n 50 -f",
+    "deploy": "make deploy"
   },
   "dependencies": {
     "dotenv": "^16.4.0",

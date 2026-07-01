@@ -6,16 +6,12 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=__USER__
-WorkingDirectory=__SERVICE_DIR__
-
-ExecStart=/usr/bin/node __SERVICE_DIR__/dist/index.js
-
+WorkingDirectory=/srv/services/mail-relay
+ExecStart=/usr/bin/node /srv/services/mail-relay/dist/index.js
 Restart=on-failure
 RestartSec=5
 StartLimitBurst=5
-
 Environment=NODE_ENV=production
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
