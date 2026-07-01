@@ -3,15 +3,12 @@ DEST := /srv/services/$(NAME)
 SERVICE := $(NAME).service
 
 deploy:
-	npm run build
-	rsync -av --delete \
-	  --exclude='src/' \
-	  --exclude='node_modules/' \
-	  --exclude='.env' \
-	  --exclude='logs/' \
-	  --exclude='.git/' \
-	  . $(DEST)/
-	cd $(DEST) && CI=true pnpm install --prod
+	pnpm build && \
+	  rsync -av --delete dist/ $(DEST)/dist/ && \
+	  cp package.json pnpm-lock.yaml $(DEST)/
+	rsync -av --delete templates/ $(DEST)/templates/
+	cp clients.yaml $(DEST)/
+	cd $(DEST) && rm -rf node_modules && CI=true pnpm install --prod --no-frozen-lockfile
 	systemctl --user restart $(SERVICE)
 
 restart:
