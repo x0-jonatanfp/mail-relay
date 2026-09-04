@@ -39,7 +39,7 @@ function startServiceStatus(telegram: TelegramSender, clientCount: number, mailR
   const sendStatus = async () => {
     try {
       const status = await getServiceStatus(clientCount)
-      await telegram.sendServiceStatus(status, SERVICE_STATUS_INTERVAL_HOURS)
+      await telegram.sendServiceStatus(status)
     } catch (err) {
       console.error('[status] Error al obtener estadísticas:', err instanceof Error ? err.message : String(err))
     }

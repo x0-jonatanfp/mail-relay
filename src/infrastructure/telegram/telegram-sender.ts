@@ -40,25 +40,18 @@ export class TelegramSender {
   }
 
   async sendFormNotification(clientName: string, todayCount: number, errorsToday: number): Promise<void> {
-    const text = `<b>✅ ${escapeHtml(clientName)}</b>
-
-<pre>📬 ${todayCount} envíos hoy | ❌ ${errorsToday} errores</pre>`
+    const errors = errorsToday > 0 ? ` · ${errorsToday} ${errorsToday === 1 ? 'error' : 'errores'} hoy` : ''
+    const text = `📬 <b>${escapeHtml(clientName)}</b> · formulario recibido · ${todayCount} hoy${errors}`
     await this.send(text)
   }
 
   async sendErrorNotification(clientName: string, error: string, host: string, port: number): Promise<void> {
-    const text = `<b>❌ Error en ${escapeHtml(clientName)}</b>
-
-<pre>📬 ${escapeHtml(error)}</pre>
-
-${escapeHtml(host)}:${port}`
+    const text = `❌ <b>${escapeHtml(clientName)}</b> · no se pudo enviar el correo · ${escapeHtml(host)}:${port}`
     await this.send(text)
   }
 
-  async sendServiceStatus(status: ServiceStatus, intervalHours: number): Promise<void> {
-    const text = `<b>📊 mail-relay · ${status.clientCount} clientes</b>
-
-<pre>📬 ${status.todayCount} hoy · ${status.totalSent} total</pre>`
+  async sendServiceStatus(status: ServiceStatus): Promise<void> {
+    const text = `📊 <b>mail-relay</b> · ${status.clientCount} clientes · ${status.todayCount} hoy · ${status.totalSent} en total`
     await this.send(text)
   }
 }
