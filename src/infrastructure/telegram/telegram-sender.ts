@@ -74,28 +74,33 @@ export class TelegramSender {
 
   async sendSelfTestResult(summary: SelfTestSummary): Promise<void> {
     const allOk = summary.dbOk && summary.clients.length > 0 && summary.clients.every((c) => c.ok)
-    const head = `${allOk ? '🟢' : '🔴'} <b>Self-test mail-relay</b> · ${allOk ? 'todo OK' : 'hay fallos'} · ${summary.durationMs} ms`
+    const parts: string[] = [`${allOk ? '🟢' : '🔴'} <b>Self-test mail-relay</b>`]
 
-    const lines = summary.clients.map((c) => {
-      const icon = c.ok ? '✅' : '❌'
-      const detail = c.ok ? 'auth OK' : oneLine(c.error || 'error desconocido')
-      return `${icon} ${escapeHtml(c.name)} · ${detail} · ${escapeHtml(c.smtp)}`
-    })
+    // PostgreSQL
+    if (summary.dbOk) {
+      parts.push('BD OK')
+    } else {
+      parts.push(`BD KO${summary.dbError ? ` (${oneLine(summary.dbError)})` : ''}`)
+    }
+
+    // Clientes (un segmento por cliente, en una sola línea)
     if (summary.clients.length === 0) {
-      lines.push('⚠️ ningún cliente configurado/comprobado')
-    }
-    if (summary.dbError) {
-      lines.push(`❌ PostgreSQL · ${oneLine(summary.dbError)}`)
+      parts.push('ningún cliente comprobado')
+    } else {
+      for (const c of summary.clients) {
+        parts.push(c.ok
+          ? `${escapeHtml(c.name)} OK`
+          : `${escapeHtml(c.name)} KO · ${escapeHtml(c.smtp)}${c.error ? ` (${oneLine(c.error)})` : ''}`)
+      }
     }
 
-    const text = [head, `${summary.dbOk ? '✅' : '❌'} PostgreSQL`, ...lines].join('\n')
-    await this.send(text)
+    await this.send(parts.join(' · '))
   }
 }
 
 /** Normaliza un error a una sola línea (HTML-escapeada y truncada) para Telegram. */
 function oneLine(str: string): string {
-  return escapeHtml(str).replace(/\s+/g, ' ').trim().slice(0, 140)
+  return escapeHtml(str).replace(/\s+/g, ' ').trim().slice(0, 100)
 }
 
 function escapeHtml(str: string): string {
