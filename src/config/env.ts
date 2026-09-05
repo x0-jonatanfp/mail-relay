@@ -10,4 +10,6 @@ export const env = {
   BIND: process.env.BIND || '127.0.0.1',
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || '',
   DATABASE_URL: process.env.DATABASE_URL || '',
+  // Secreto que protege el endpoint de self-test (GET /api/selftest)
+  SELF_TEST_SECRET: process.env.SELF_TEST_SECRET || '',
 }

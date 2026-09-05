@@ -30,6 +30,13 @@ export async function recordSent(entry: SentEntry): Promise<void> {
 }
 
 /**
+ * Comprueba que PostgreSQL responde (usado por el self-test).
+ */
+export async function pingDatabase(): Promise<void> {
+  await query('SELECT 1')
+}
+
+/**
  * Obtiene estadísticas para el mensaje de status.
  */
 export async function getServiceStatus(clientCount: number): Promise<ServiceStatus> {

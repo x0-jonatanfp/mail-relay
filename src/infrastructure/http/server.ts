@@ -4,8 +4,8 @@ import type { FormData } from '../../domain/entities/form-data.js'
 import type { ClientConfig } from '../../domain/entities/client-config.js'
 import { env } from '../../config/env.js'
 import { findClient } from '../../config/clients.js'
-import { getServiceStatus } from '../persistence/relay-store.js'
-import type { TelegramSender } from '../telegram/telegram-sender.js'
+import { getServiceStatus, pingDatabase } from '../persistence/relay-store.js'
+import type { TelegramSender, SelfTestClientResult } from '../telegram/telegram-sender.js'
 
 export function createServer(
   mailRelay: MailRelayService,
@@ -104,6 +104,75 @@ export function createServer(
         message: 'Error interno del servidor',
         error: message,
       })
+    }
+  })
+
+  // Self-test periódico: comprueba BD + SMTP de cada cliente SIN enviar correos.
+  // Uso: GET /api/selftest?secret=...  (opcional: &client=gmcshocks para uno solo)
+  app.get('/api/selftest', async (req, res) => {
+    const started = Date.now()
+    try {
+      const secret = typeof req.query.secret === 'string' ? req.query.secret : ''
+      if (!env.SELF_TEST_SECRET) {
+        res.status(503).json({ success: false, message: 'Self-test desactivado: falta SELF_TEST_SECRET en .env' })
+        return
+      }
+      if (secret !== env.SELF_TEST_SECRET) {
+        res.status(403).json({ success: false, message: 'Secreto inválido' })
+        return
+      }
+
+      // 1) PostgreSQL responde
+      let dbOk = false
+      let dbError: string | undefined
+      try {
+        await pingDatabase()
+        dbOk = true
+      } catch (error) {
+        dbError = error instanceof Error ? error.message : String(error)
+      }
+
+      // 2) Clientes a comprobar: todos por defecto, o uno concreto con ?client=
+      const only = typeof req.query.client === 'string' ? req.query.client.trim() : ''
+      const ids = only
+        ? (clients.has(only) ? [only] : [])
+        : [...clients.keys()].filter((k) => !k.includes('.')) // claves sin dominio = ids de cliente
+
+      const results: SelfTestClientResult[] = []
+      for (const id of ids) {
+        const client = clients.get(id)
+        if (!client) continue
+        const check = await mailRelay.selfTestClient(client)
+        results.push({
+          client: client.id,
+          name: client.name,
+          smtp: `${client.smtp.host}:${client.smtp.port}`,
+          ok: check.ok,
+          error: check.error,
+        })
+      }
+
+      const okAll = dbOk && results.length > 0 && results.every((r) => r.ok)
+
+      // 3) Aviso por Telegram (fire-and-forget)
+      telegram.sendSelfTestResult({
+        dbOk,
+        dbError,
+        clients: results,
+        durationMs: Date.now() - started,
+      }).catch(() => {})
+
+      res.status(okAll ? 200 : 500).json({
+        success: okAll,
+        date: new Date().toISOString(),
+        durationMs: Date.now() - started,
+        db: { ok: dbOk, error: dbError },
+        clients: results,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error('[selftest] Error interno:', message)
+      res.status(500).json({ success: false, message: 'Error interno del servidor', error: message })
     }
   })
 

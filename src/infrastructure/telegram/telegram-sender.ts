@@ -2,6 +2,23 @@ import type { ServiceStatus } from '../persistence/relay-store.js'
 
 const GATEWAY_URL = process.env.TG_GATEWAY_URL || 'http://localhost:2025'
 
+/** Resultado de la comprobación SMTP de un cliente (para el self-test). */
+export interface SelfTestClientResult {
+  client: string
+  name: string
+  smtp: string
+  ok: boolean
+  error?: string
+}
+
+/** Resumen completo del self-test (BD + clientes). */
+export interface SelfTestSummary {
+  dbOk: boolean
+  dbError?: string
+  clients: SelfTestClientResult[]
+  durationMs: number
+}
+
 export class TelegramSender {
   private chatId: string
 
@@ -54,6 +71,31 @@ export class TelegramSender {
     const text = `📊 <b>mail-relay</b> · ${status.clientCount} clientes · ${status.todayCount} hoy · ${status.totalSent} en total`
     await this.send(text)
   }
+
+  async sendSelfTestResult(summary: SelfTestSummary): Promise<void> {
+    const allOk = summary.dbOk && summary.clients.length > 0 && summary.clients.every((c) => c.ok)
+    const head = `${allOk ? '🟢' : '🔴'} <b>Self-test mail-relay</b> · ${allOk ? 'todo OK' : 'hay fallos'} · ${summary.durationMs} ms`
+
+    const lines = summary.clients.map((c) => {
+      const icon = c.ok ? '✅' : '❌'
+      const detail = c.ok ? 'auth OK' : oneLine(c.error || 'error desconocido')
+      return `${icon} ${escapeHtml(c.name)} · ${detail} · ${escapeHtml(c.smtp)}`
+    })
+    if (summary.clients.length === 0) {
+      lines.push('⚠️ ningún cliente configurado/comprobado')
+    }
+    if (summary.dbError) {
+      lines.push(`❌ PostgreSQL · ${oneLine(summary.dbError)}`)
+    }
+
+    const text = [head, `${summary.dbOk ? '✅' : '❌'} PostgreSQL`, ...lines].join('\n')
+    await this.send(text)
+  }
+}
+
+/** Normaliza un error a una sola línea (HTML-escapeada y truncada) para Telegram. */
+function oneLine(str: string): string {
+  return escapeHtml(str).replace(/\s+/g, ' ').trim().slice(0, 140)
 }
 
 function escapeHtml(str: string): string {

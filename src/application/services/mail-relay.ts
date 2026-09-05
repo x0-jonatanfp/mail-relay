@@ -1,4 +1,4 @@
-import type { MailSender } from '../../domain/ports/mail-sender.js'
+import type { MailSender, SmtpVerifyResult } from '../../domain/ports/mail-sender.js'
 import type { FormData, FormResult } from '../../domain/entities/form-data.js'
 import type { ClientConfig } from '../../domain/entities/client-config.js'
 import { recordSent } from '../../infrastructure/persistence/relay-store.js'
@@ -32,6 +32,14 @@ export class MailRelayService {
     }
 
     return result
+  }
+
+  /**
+   * Comprueba que el SMTP del cliente conecta y autentica (sin enviar mensajes).
+   * Usado por el self-test periódico: si las credenciales fallan, avisar al cliente.
+   */
+  async selfTestClient(client: ClientConfig): Promise<SmtpVerifyResult> {
+    return this.smtpSender.verify(client)
   }
 
   resetSentCount(): void {

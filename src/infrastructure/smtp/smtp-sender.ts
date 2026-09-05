@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { MailSender } from '../../domain/ports/mail-sender.js'
+import type { MailSender, SmtpVerifyResult } from '../../domain/ports/mail-sender.js'
 import type { FormData, FormResult } from '../../domain/entities/form-data.js'
 import type { ClientConfig } from '../../domain/entities/client-config.js'
 
@@ -47,6 +47,36 @@ export class SmtpSender implements MailSender {
         message: 'Error al enviar por SMTP',
         error: message,
       }
+    }
+  }
+
+  /**
+   * Comprueba que el SMTP del cliente conecta (TLS/SNI) y autentica, sin enviar nada.
+   * `transporter.verify()` hace connect + EHLO + AUTH y cierra la conexión.
+   */
+  async verify(client: ClientConfig): Promise<SmtpVerifyResult> {
+    const transporter = nodemailer.createTransport({
+      host: client.smtp.host,
+      port: client.smtp.port,
+      secure: client.smtp.secure,
+      auth: {
+        user: client.smtp.user,
+        pass: client.smtp.pass,
+      },
+      // Evitar que el chequeo se quede colgado si el host no responde
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
+    })
+
+    try {
+      await transporter.verify()
+      return { ok: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { ok: false, error: message }
+    } finally {
+      transporter.close()
     }
   }
 
