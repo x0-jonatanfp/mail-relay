@@ -1,6 +1,6 @@
 import type { ServiceStatus } from '../persistence/relay-store.js'
 
-const GATEWAY_URL = process.env.TG_GATEWAY_URL || 'http://localhost:2025'
+const GATEWAY_URL = process.env.TG_GATEWAY_URL || 'http://localhost:4000'
 
 /** Resultado de la comprobación SMTP de un cliente (para el self-test). */
 export interface SelfTestClientResult {
