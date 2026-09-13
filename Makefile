@@ -1,6 +1,6 @@
 NAME := mail-relay
 DEST := /srv/services/$(NAME)
-SERVICE := $(NAME)  # app PM2 (ver deploy/ecosystem.config.cjs de x0void)
+SERVICE := $(NAME)  # unidad systemd --user (deploy/$(NAME).service)
 
 deploy:
 	pnpm build && \
@@ -9,14 +9,13 @@ deploy:
 	rsync -av --delete templates/ $(DEST)/templates/
 	cp clients.yaml $(DEST)/
 	cd $(DEST) && rm -rf node_modules && CI=true pnpm install --prod --no-frozen-lockfile
-	pm2 restart $(SERVICE)
-	pm2 save
+	systemctl --user restart $(SERVICE).service
 
 restart:
-	pm2 restart $(SERVICE)
+	systemctl --user restart $(SERVICE).service
 
 status:
-	pm2 status $(SERVICE)
+	systemctl --user status $(SERVICE).service --no-pager
 
 logs:
-	pm2 logs $(SERVICE) --lines 50
+	journalctl --user -u $(SERVICE).service -n 50 -f
