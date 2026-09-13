@@ -1,0 +1,22 @@
+[Unit]
+Description=Mail Relay — formularios de contacto multi-cliente
+After=network-online.target postgresql.service
+Wants=network-online.target
+StartLimitIntervalSec=180
+StartLimitBurst=15
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/services/mail-relay
+# El lanzador pone DATABASE_URL desde ~/.secrets y carga el .env del servicio.
+ExecStart=/home/cultofskaro/.secrets/bin/run srv:mail-relay -- /usr/bin/node dist/index.js
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=5
+UMask=0077
+TimeoutStopSec=20
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
