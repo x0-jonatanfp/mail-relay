@@ -18,6 +18,12 @@ export function createServer(
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
 
+  // Liveness en la raíz, sin tocar la BD ni Telegram: responde mientras el
+  // proceso esté en pie. El detalle con clientes está en /api/health.
+  app.get('/health', (_req, res) => {
+    res.json({ ok: true, service: 'mail-relay', uptime: process.uptime() })
+  })
+
   // Health check
   app.get('/api/health', (_req, res) => {
     res.json({
