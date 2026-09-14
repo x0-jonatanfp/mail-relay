@@ -1,4 +1,5 @@
 import type { ServiceStatus } from '../persistence/relay-store.js'
+import { logger } from '../logging/Logger.js'
 
 const GATEWAY_URL = process.env.TG_GATEWAY_URL || 'http://localhost:4000'
 
@@ -32,7 +33,7 @@ export class TelegramSender {
 
   private async send(text: string): Promise<void> {
     if (!this.chatId) {
-      console.warn('[telegram] Chat ID no configurado')
+      logger.warn('[telegram] Chat ID no configurado')
       return
     }
 
@@ -49,10 +50,12 @@ export class TelegramSender {
 
       if (!res.ok) {
         const body = await res.text()
-        console.warn(`[telegram] Gateway error ${res.status}: ${body}`)
+        logger.warn('[telegram] Gateway error', { status: res.status, body })
       }
     } catch (err) {
-      console.warn('[telegram] Error de conexión con gateway:', err instanceof Error ? err.message : String(err))
+      logger.warn('[telegram] Error de conexión con gateway', {
+        error: err instanceof Error ? err.message : String(err),
+      })
     }
   }
 

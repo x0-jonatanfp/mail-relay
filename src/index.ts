@@ -5,6 +5,7 @@ import { TelegramSender } from './infrastructure/telegram/telegram-sender.js'
 import { loadClients } from './config/clients.js'
 import { env } from './config/env.js'
 import { getServiceStatus } from './infrastructure/persistence/relay-store.js'
+import { logger } from './infrastructure/logging/Logger.js'
 
 const SERVICE_STATUS_INTERVAL_HOURS = 2
 
@@ -28,9 +29,9 @@ function main() {
   // 6. Service status periódico (fire-and-forget)
   startServiceStatus(telegram, clientCount, mailRelay)
 
-  console.log(`[mail-relay] 🚀 Listo en ${env.BIND}:${env.PORT}`)
-  console.log(`[mail-relay] Clientes: ${[...clients.keys()].filter(k => !k.includes('.')).join(', ')}`)
-  console.log(`[mail-relay] Service status cada ${SERVICE_STATUS_INTERVAL_HOURS}h`)
+  logger.info(`[mail-relay] 🚀 Listo en ${env.BIND}:${env.PORT}`)
+  logger.info(`[mail-relay] Clientes: ${[...clients.keys()].filter(k => !k.includes('.')).join(', ')}`)
+  logger.info(`[mail-relay] Service status cada ${SERVICE_STATUS_INTERVAL_HOURS}h`)
 }
 
 function startServiceStatus(telegram: TelegramSender, clientCount: number, mailRelay: MailRelayService): void {
@@ -41,7 +42,9 @@ function startServiceStatus(telegram: TelegramSender, clientCount: number, mailR
       const status = await getServiceStatus(clientCount)
       await telegram.sendServiceStatus(status)
     } catch (err) {
-      console.error('[status] Error al obtener estadísticas:', err instanceof Error ? err.message : String(err))
+      logger.error('[status] Error al obtener estadísticas', {
+        error: err instanceof Error ? err.message : String(err),
+      })
     }
   }
 

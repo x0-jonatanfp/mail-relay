@@ -6,6 +6,7 @@ import { env } from '../../config/env.js'
 import { findClient } from '../../config/clients.js'
 import { getServiceStatus, pingDatabase } from '../persistence/relay-store.js'
 import type { TelegramSender, SelfTestClientResult } from '../telegram/telegram-sender.js'
+import { logger } from '../logging/Logger.js'
 
 export function createServer(
   mailRelay: MailRelayService,
@@ -97,7 +98,7 @@ export function createServer(
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error('[http] Error interno:', message)
+      logger.error('[http] Error interno', { error: message })
       res.status(500).json({
         success: false,
         method: 'none',
@@ -171,7 +172,7 @@ export function createServer(
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error('[selftest] Error interno:', message)
+      logger.error('[selftest] Error interno', { error: message })
       res.status(500).json({ success: false, message: 'Error interno del servidor', error: message })
     }
   })
@@ -182,7 +183,7 @@ export function createServer(
 export function startServer(app: ReturnType<typeof createServer>) {
   return new Promise<void>((resolve, reject) => {
     app.listen(env.PORT, env.BIND, () => {
-      console.log(`[mail-relay] Servidor escuchando en ${env.BIND}:${env.PORT}`)
+      logger.info(`[mail-relay] Servidor escuchando en ${env.BIND}:${env.PORT}`)
       resolve()
     })
   })

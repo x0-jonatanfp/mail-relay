@@ -1,5 +1,6 @@
 import pg from 'pg'
 import { env } from './env.js'
+import { logger } from '../infrastructure/logging/Logger.js'
 
 const pool = new pg.Pool({
   connectionString: env.DATABASE_URL,
@@ -8,7 +9,7 @@ const pool = new pg.Pool({
 })
 
 pool.on('error', (err) => {
-  console.error('[db] Error inesperado en el pool:', err.message)
+  logger.error('[db] Error inesperado en el pool', { error: err.message })
 })
 
 export async function query<T extends pg.QueryResultRow = any>(

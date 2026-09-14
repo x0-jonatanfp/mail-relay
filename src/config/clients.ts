@@ -3,6 +3,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
 import type { ClientConfig } from '../domain/entities/client-config.js'
+import { logger } from '../infrastructure/logging/Logger.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CONFIG_PATH = resolve(__dirname, '../../clients.yaml')
@@ -20,7 +21,7 @@ export function loadClients(): LoadedClients {
   const path = existsSync(CONFIG_PATH) ? CONFIG_PATH : resolve(__dirname, '../../clients.example.yaml')
 
   if (!existsSync(path)) {
-    console.error('[clients] No se encuentra clients.yaml en', CONFIG_PATH)
+    logger.error('[clients] No se encuentra clients.yaml', { path: CONFIG_PATH })
     process.exit(1)
   }
 
@@ -36,9 +37,9 @@ export function loadClients(): LoadedClients {
     }
   }
 
-  console.log(`[clients] ${parsed.clients.length} cliente(s) cargados:`)
+  logger.info(`[clients] ${parsed.clients.length} cliente(s) cargados:`)
   for (const c of parsed.clients) {
-    console.log(`  - ${c.id} (${c.name}) → ${c.to}`)
+    logger.info(`[clients] ${c.id} (${c.name}) → ${c.to}`)
   }
 
   return { map, count: parsed.clients.length }
