@@ -190,44 +190,24 @@ Response:
 
 ## Deployment
 
-### Automated (deploy.sh)
+The service runs as a **system systemd unit** (`deploy/mail-relay.service`,
+code in `/srv/services/mail-relay`). Build, sync and restart in one step:
 
 ```bash
-pnpm deploy
+make deploy
 ```
 
-Installs to `/srv/services/mail-relay` by default. Override with environment variables:
+The unit gets the DB credentials from `~/.secrets` through
+`~/.secrets/bin/run`, writes `/var/log/mail-relay.log` (rotated by logrotate)
+and keeps the journal (`journalctl -u mail-relay`).
+
+Manual install of the unit:
 
 ```bash
-SERVICE_DIR=/opt/mail-relay RUN_USER=www-data ./deploy.sh
-```
-
-### Manual setup
-
-```bash
-pnpm build
-sudo mkdir -p /srv/services/mail-relay
-sudo cp -r dist/ templates/ /srv/services/mail-relay/
-sudo cp clients.example.yaml /srv/services/mail-relay/clients.yaml
-sudo cp .env.example /srv/services/mail-relay/.env
-
-# Install and configure systemd service
-sudo cp mail-relay.service /etc/systemd/system/mail-relay.service
+sudo cp deploy/mail-relay.service /etc/systemd/system/mail-relay.service
 sudo systemctl daemon-reload
-
-# Edit User, WorkingDirectory, and ExecStart to match your setup
-sudo systemctl edit --full mail-relay.service
-
-sudo systemctl enable --now mail-relay
+sudo systemctl enable --now mail-relay.service
 ```
-
-> **Note:** `mail-relay.service` uses `__USER__` and `__SERVICE_DIR__` placeholders. `deploy.sh` replaces them automatically. For manual install, use `sed`:
->
-> ```bash
-> sed -e 's/__USER__/your-user/g' \
->     -e 's|__SERVICE_DIR__|/path/to/mail-relay|g' \
->     mail-relay.service | sudo tee /etc/systemd/system/mail-relay.service
-> ```
 
 ---
 
@@ -248,8 +228,8 @@ mail-relay/
 ├── templates/                  # HTML email templates
 ├── clients.example.yaml        # Client configuration template
 ├── .env.example                # Environment variables template
-├── deploy.sh                   # Deployment script
-├── mail-relay.service          # systemd unit template
+├── deploy/mail-relay.service   # systemd unit (system)
+├── Makefile                    # build + deploy + restart
 └── LICENSE                     # MIT License
 ```
 

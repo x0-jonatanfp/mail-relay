@@ -190,44 +190,24 @@ Respuesta:
 
 ## Despliegue
 
-### Automático (deploy.sh)
+El servicio corre como **unidad de sistema systemd** (`deploy/mail-relay.service`,
+código en `/srv/services/mail-relay`). Build, sincronizado y reinicio en un paso:
 
 ```bash
-pnpm deploy
+make deploy
 ```
 
-Instala en `/srv/services/mail-relay` por defecto. Sobrescribe con variables de entorno:
+La unidad toma las credenciales de la BD de `~/.secrets` mediante
+`~/.secrets/bin/run`, escribe `/var/log/mail-relay.log` (lo rota logrotate) y
+mantiene el journal (`journalctl -u mail-relay`).
+
+Instalación manual de la unidad:
 
 ```bash
-SERVICE_DIR=/opt/mail-relay RUN_USER=www-data ./deploy.sh
-```
-
-### Instalación manual
-
-```bash
-pnpm build
-sudo mkdir -p /srv/services/mail-relay
-sudo cp -r dist/ templates/ /srv/services/mail-relay/
-sudo cp clients.example.yaml /srv/services/mail-relay/clients.yaml
-sudo cp .env.example /srv/services/mail-relay/.env
-
-# Instalar y configurar el servicio systemd
-sudo cp mail-relay.service /etc/systemd/system/mail-relay.service
+sudo cp deploy/mail-relay.service /etc/systemd/system/mail-relay.service
 sudo systemctl daemon-reload
-
-# Edita User, WorkingDirectory y ExecStart según tu configuración
-sudo systemctl edit --full mail-relay.service
-
-sudo systemctl enable --now mail-relay
+sudo systemctl enable --now mail-relay.service
 ```
-
-> **Nota:** `mail-relay.service` usa los placeholders `__USER__` y `__SERVICE_DIR__`. `deploy.sh` los reemplaza automáticamente. Para instalación manual, usa `sed`:
->
-> ```bash
-> sed -e 's/__USER__/tu-usuario/g' \
->     -e 's|__SERVICE_DIR__|/ruta/a/mail-relay|g' \
->     mail-relay.service | sudo tee /etc/systemd/system/mail-relay.service
-> ```
 
 ---
 
@@ -248,8 +228,8 @@ mail-relay/
 ├── templates/                  # Plantillas HTML de email
 ├── clients.example.yaml        # Plantilla de configuración de cliente
 ├── .env.example                # Plantilla de variables de entorno
-├── deploy.sh                   # Script de despliegue
-├── mail-relay.service          # Plantilla de unidad systemd
+├── deploy/mail-relay.service   # Unidad systemd (sistema)
+├── Makefile                    # build + deploy + restart
 └── LICENSE                     # Licencia MIT
 ```
 
