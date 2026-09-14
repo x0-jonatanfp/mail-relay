@@ -10,9 +10,9 @@
     "build": "tsc",
     "serve": "node dist/index.js",
     "test": "vitest run",
-    "restart": "systemctl --user restart mail-relay.service",
-    "status": "systemctl --user status mail-relay.service",
-    "logs": "journalctl --user -u mail-relay.service -n 50 -f",
+    "restart": "sudo systemctl restart mail-relay.service",
+    "status": "sudo systemctl status mail-relay.service",
+    "logs": "journalctl -u mail-relay.service -n 50 -f",
     "deploy": "make deploy"
   },
   "dependencies": {

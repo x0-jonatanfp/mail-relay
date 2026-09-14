@@ -7,10 +7,14 @@ StartLimitBurst=15
 
 [Service]
 Type=simple
+User=cultofskaro
+Group=cultofskaro
 WorkingDirectory=/srv/services/mail-relay
+Environment=HOME=/home/cultofskaro
+Environment=LOG_FILE=/var/log/mail-relay.log
+Environment=NODE_ENV=production
 # El lanzador pone DATABASE_URL desde ~/.secrets y carga el .env del servicio.
 ExecStart=/home/cultofskaro/.secrets/bin/run srv:mail-relay -- /usr/bin/node dist/index.js
-Environment=NODE_ENV=production
 Restart=always
 RestartSec=5
 UMask=0077
@@ -19,4 +23,4 @@ StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

@@ -1,6 +1,6 @@
 NAME := mail-relay
 DEST := /srv/services/$(NAME)
-SERVICE := $(NAME)  # unidad systemd --user (deploy/$(NAME).service)
+SERVICE := $(NAME)  # unidad de sistema (deploy/$(NAME).service)
 
 deploy:
 	pnpm build && \
@@ -9,13 +9,13 @@ deploy:
 	rsync -av --delete templates/ $(DEST)/templates/
 	cp clients.yaml $(DEST)/
 	cd $(DEST) && rm -rf node_modules && CI=true pnpm install --prod --no-frozen-lockfile
-	systemctl --user restart $(SERVICE).service
+	sudo systemctl restart $(SERVICE).service
 
 restart:
-	systemctl --user restart $(SERVICE).service
+	sudo systemctl restart $(SERVICE).service
 
 status:
-	systemctl --user status $(SERVICE).service --no-pager
+	sudo systemctl status $(SERVICE).service --no-pager
 
 logs:
-	journalctl --user -u $(SERVICE).service -n 50 -f
+	journalctl -u $(SERVICE).service -n 50 -f
